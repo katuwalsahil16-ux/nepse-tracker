@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Habit Coach — Sahil</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #0d0d0f;
+  --surface: #16161a;
+  --surface2: #1e1e24;
+  --border: #2a2a35;
+  --accent: #c8f135;
+  --accent2: #7c6af7;
+  --text: #f0f0f0;
+  --muted: #6b6b7b;
+  --danger: #ff5a5a;
+  --warn: #ffb547;
+  --success: #4ade80;
+  --radius: 14px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+
+/* scrollbar */
+::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: var(--bg); } ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.25rem 2rem; border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 100; background: rgba(13,13,15,0.92);
+  backdrop-filter: blur(12px);
+}
+header .logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.15rem; letter-spacing: -0.02em; }
+header .logo span { color: var(--accent); }
+#clock { font-size: 0.78rem; color: var(--muted); background: var(--surface); padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border); }
+
+.nav { display: flex; gap: 4px; padding: 1rem 2rem 0; overflow-x: auto; }
+.nav-btn { font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 500; padding: 0.5rem 1.1rem; border-radius: 30px; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; white-space: nowrap; transition: all 0.2s; }
+.nav-btn.active, .nav-btn:hover { background: var(--accent); color: #000; border-color: var(--accent); }
+
+.page { display: none; padding: 1.5rem 2rem 4rem; max-width: 1100px; }
+.page.active { display: block; }
+
+.page-title { font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 700; margin-bottom: 0.3rem; }
+.page-sub { font-size: 0.83rem; color: var(--muted); margin-bottom: 1.5rem; }
+
+/* Cards */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem 1.4rem; margin-bottom: 1rem; }
+.card-title { font-family: 'Syne', sans-serif; font-size: 0.9rem; font-weight: 600; margin-bottom: 1rem; color: var(--text); }
+
+/* Stats grid */
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 1.25rem; }
+.stat-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 1rem; }
+.stat-box .lbl { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 6px; }
+.stat-box .val { font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 700; }
+.val.green { color: var(--accent); } .val.purple { color: var(--accent2); } .val.warn { color: var(--warn); } .val.red { color: var(--danger); }
+
+/* Forms */
+.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-bottom: 12px; }
+.fg { display: flex; flex-direction: column; gap: 5px; }
+.fg label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+input, select, textarea { background: var(--surface2); border: 1px solid var(--border); border-radius: 9px; padding: 0.6rem 0.85rem; font-size: 0.85rem; color: var(--text); font-family: 'DM Sans', sans-serif; outline: none; width: 100%; transition: border 0.2s; }
+input:focus, select:focus, textarea:focus { border-color: var(--accent2); }
+select option { background: var(--surface2); }
+textarea { resize: vertical; min-height: 70px; }
+
+/* Buttons */
+.btn { font-family: 'DM Sans', sans-serif; font-size: 0.84rem; font-weight: 500; padding: 0.6rem 1.25rem; border-radius: 9px; border: none; cursor: pointer; transition: all 0.18s; }
+.btn-accent { background: var(--accent); color: #000; }
+.btn-accent:hover { background: #b8e020; transform: translateY(-1px); }
+.btn-ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+.btn-ghost:hover { border-color: var(--accent2); }
+.btn-danger { background: rgba(255,90,90,0.12); color: var(--danger); border: 1px solid rgba(255,90,90,0.2); }
+.btn-danger:hover { background: rgba(255,90,90,0.22); }
+.btn-sm { padding: 0.32rem 0.75rem; font-size: 0.76rem; }
+
+/* Table */
+.tbl-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+th { text-align: left; padding: 0.55rem 0.75rem; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); border-bottom: 1px solid var(--border); font-weight: 500; }
+td { padding: 0.7rem 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(255,255,255,0.02); }
+.empty { text-align: center; color: var(--muted); padding: 2.5rem; font-size: 0.83rem; }
+
+/* Badges */
+.badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 500; }
+.badge-health { background: rgba(74,222,128,0.12); color: var(--success); }
+.badge-study { background: rgba(124,106,247,0.15); color: var(--accent2); }
+.badge-productivity { background: rgba(200,241,53,0.12); color: var(--accent); }
+.badge-personal { background: rgba(255,181,71,0.12); color: var(--warn); }
+.badge-done { background: rgba(74,222,128,0.12); color: var(--success); }
+.badge-missed { background: rgba(255,90,90,0.12); color: var(--danger); }
+.badge-partial { background: rgba(255,181,71,0.12); color: var(--warn); }
+.priority-high { color: var(--danger); font-size: 0.75rem; }
+.priority-med { color: var(--warn); font-size: 0.75rem; }
+.priority-low { color: var(--muted); font-size: 0.75rem; }
+
+/* Streak dots */
+.streak-row { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
+.dot { width: 10px; height: 10px; border-radius: 3px; background: var(--border); }
+.dot.done { background: var(--accent); }
+.dot.missed { background: var(--danger); opacity: 0.5; }
+
+/* Coach bubble */
+.coach-msg { background: linear-gradient(135deg, rgba(124,106,247,0.12), rgba(200,241,53,0.06)); border: 1px solid rgba(124,106,247,0.25); border-radius: var(--radius); padding: 1rem 1.25rem; margin-bottom: 1rem; font-size: 0.85rem; line-height: 1.7; color: var(--text); }
+.coach-msg strong { color: var(--accent2); font-family: 'Syne', sans-serif; }
+
+/* Score ring placeholder */
+.score-circle { display: flex; align-items: center; justify-content: center; width: 90px; height: 90px; border-radius: 50%; border: 3px solid var(--accent); font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 700; color: var(--accent); margin: 0 auto 0.5rem; }
+
+/* Check-in habit row */
+.checkin-habit { display: flex; align-items: center; gap: 12px; padding: 0.75rem 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+.checkin-habit:last-child { border-bottom: none; }
+.checkin-habit .hname { flex: 1; font-size: 0.88rem; font-weight: 500; }
+.checkin-habit .hcat { font-size: 0.72rem; color: var(--muted); }
+.status-btns { display: flex; gap: 6px; }
+.sbtn { padding: 4px 12px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--muted); font-size: 0.75rem; cursor: pointer; transition: all 0.15s; }
+.sbtn.done-active { background: rgba(74,222,128,0.15); color: var(--success); border-color: var(--success); }
+.sbtn.missed-active { background: rgba(255,90,90,0.12); color: var(--danger); border-color: var(--danger); }
+.sbtn.partial-active { background: rgba(255,181,71,0.12); color: var(--warn); border-color: var(--warn); }
+
+/* Week grid */
+.week-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin: 0.75rem 0; }
+.wday { background: var(--surface2); border-radius: 8px; padding: 0.6rem 0.3rem; text-align: center; border: 1px solid var(--border); }
+.wday .dname { font-size: 0.65rem; color: var(--muted); margin-bottom: 4px; }
+.wday .dscore { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; }
+.wday.good { border-color: rgba(200,241,53,0.3); background: rgba(200,241,53,0.05); }
+.wday.ok { border-color: rgba(255,181,71,0.3); background: rgba(255,181,71,0.05); }
+.wday.bad { border-color: rgba(255,90,90,0.25); background: rgba(255,90,90,0.04); }
+
+/* Progress bar */
+.pbar-wrap { background: var(--surface2); border-radius: 4px; height: 6px; margin-top: 6px; overflow: hidden; }
+.pbar { height: 100%; border-radius: 4px; background: var(--accent); transition: width 0.5s ease; }
+
+/* Divider */
+.divider { border: none; border-top: 1px solid var(--border); margin: 1rem 0; }
+
+/* Analysis items */
+.analysis-item { display: flex; gap: 12px; align-items: flex-start; padding: 0.75rem 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+.analysis-item:last-child { border-bottom: none; }
+.analysis-icon { font-size: 1.1rem; margin-top: 2px; }
+.analysis-text { font-size: 0.84rem; line-height: 1.6; color: var(--text); }
+.analysis-text .hl { color: var(--accent); font-weight: 500; }
+
+@media (max-width: 600px) {
+  header, .nav, .page { padding-left: 1rem; padding-right: 1rem; }
+  .form-grid { grid-template-columns: 1fr 1fr; }
+  .stats { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Habit<span>Coach</span></div>
+  <div id="clock"></div>
+</header>
+
+<div class="nav">
+  <button class="nav-btn active" onclick="showPage('dashboard', this)">Dashboard</button>
+  <button class="nav-btn" onclick="showPage('habits', this)">My Habits</button>
+  <button class="nav-btn" onclick="showPage('checkin', this)">Daily Check-in</button>
+  <button class="nav-btn" onclick="showPage('weekly', this)">Weekly Review</button>
+  <button class="nav-btn" onclick="showPage('analysis', this)">Coach Analysis</button>
+</div>
+
+<!-- DASHBOARD -->
+<div class="page active" id="dashboard">
+  <p class="page-title">Good day, Sahil 👋</p>
+  <p class="page-sub">Here's your performance overview.</p>
+
+  <div class="stats">
+    <div class="stat-box"><div class="lbl">Today's Score</div><div class="val green" id="d-today-score">—</div></div>
+    <div class="stat-box"><div class="lbl">Weekly Score</div><div class="val purple" id="d-weekly-score">—</div></div>
+    <div class="stat-box"><div class="lbl">Discipline</div><div class="val warn" id="d-discipline">—</div></div>
+    <div class="stat-box"><div class="lbl">Best Streak</div><div class="val green" id="d-streak">—</div></div>
+    <div class="stat-box"><div class="lbl">Total Habits</div><div class="val" id="d-total-habits">0</div></div>
+    <div class="stat-box"><div class="lbl">Check-ins Done</div><div class="val" id="d-checkins">0</div></div>
+  </div>
+
+  <div class="coach-msg" id="coach-daily-msg">
+    <strong>Coach says:</strong> Add your habits and start your first daily check-in to get personalized coaching feedback!
+  </div>
+
+  <div class="card">
+    <div class="card-title">This Week</div>
+    <div class="week-grid" id="week-overview"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Habit Streaks</div>
+    <div id="streak-list"><div class="empty">No habits added yet.</div></div>
+  </div>
+</div>
+
+<!-- HABITS -->
+<div class="page" id="habits">
+  <p class="page-title">My Habits</p>
+  <p class="page-sub">Define what you want to build consistently.</p>
+
+  <div class="card">
+    <div class="card-title">Add New Habit</div>
+    <div class="form-grid">
+      <div class="fg"><label>Habit Name</label><input id="h-name" placeholder="e.g. Morning Run"/></div>
+      <div class="fg"><label>Category</label>
+        <select id="h-cat">
+          <option value="health">Health & Fitness</option>
+          <option value="study">Study</option>
+          <option value="productivity">Productivity</option>
+          <option value="personal">Personal Growth</option>
+        </select>
+      </div>
+      <div class="fg"><label>Frequency</label>
+        <select id="h-freq"><option value="daily">Daily</option><option value="weekly">Weekly</option></select>
+      </div>
+      <div class="fg"><label>Target</label><input id="h-target" placeholder="e.g. 30 mins / 10 reps / yes"/></div>
+      <div class="fg"><label>Priority</label>
+        <select id="h-priority"><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select>
+      </div>
+      <div class="fg"><label>Ideal Time</label>
+        <select id="h-time">
+          <option value="morning">Morning (5–9 AM)</option>
+          <option value="afternoon">Afternoon (12–4 PM)</option>
+          <option value="evening">Evening (4–8 PM)</option>
+          <option value="night">Night (8 PM+)</option>
+          <option value="flexible">Flexible</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-accent" onclick="addHabit()">+ Add Habit</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">All Habits</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Habit</th><th>Category</th><th>Frequency</th><th>Target</th><th>Priority</th><th>Time</th><th></th></tr></thead>
+        <tbody id="habits-table"><tr><td colspan="7" class="empty">No habits yet. Add your first one above!</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- DAILY CHECK-IN -->
+<div class="page" id="checkin">
+  <p class="page-title">Daily Check-in</p>
+  <p class="page-sub" id="checkin-date">Loading...</p>
+
+  <div class="card">
+    <div class="card-title">Mark Today's Habits</div>
+    <div id="checkin-habits-list"><div class="empty">Add habits first to start checking in.</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">End-of-Day Reflection</div>
+    <div class="form-grid">
+      <div class="fg"><label>Energy Level (1–10)</label><input id="ci-energy" type="number" min="1" max="10" placeholder="e.g. 7"/></div>
+      <div class="fg"><label>Sleep Last Night (hrs)</label><input id="ci-sleep" type="number" placeholder="e.g. 7"/></div>
+    </div>
+    <div class="fg" style="margin-bottom:10px;"><label>What stopped you from completing missed habits?</label>
+      <textarea id="ci-excuse" placeholder="Be honest. Your coach is watching..."></textarea>
+    </div>
+    <div class="fg" style="margin-bottom:12px;"><label>One win today</label>
+      <input id="ci-win" placeholder="Something you're proud of today"/>
+    </div>
+    <button class="btn btn-accent" onclick="submitCheckin()">Submit Check-in</button>
+  </div>
+
+  <div class="card" id="checkin-result" style="display:none;">
+    <div class="card-title">Today's Score</div>
+    <div class="score-circle" id="ci-score-display">0%</div>
+    <div class="coach-msg" id="ci-coach-response" style="margin-top:1rem;"></div>
+  </div>
+</div>
+
+<!-- WEEKLY REVIEW -->
+<div class="page" id="weekly">
+  <p class="page-title">Weekly Review</p>
+  <p class="page-sub">Patterns don't lie. Let's look at the data.</p>
+
+  <div class="stats">
+    <div class="stat-box"><div class="lbl">Completion Rate</div><div class="val green" id="wr-completion">—</div></div>
+    <div class="stat-box"><div class="lbl">Discipline Score</div><div class="val purple" id="wr-discipline">—</div></div>
+    <div class="stat-box"><div class="lbl">Avg Energy</div><div class="val warn" id="wr-energy">—</div></div>
+    <div class="stat-box"><div class="lbl">Avg Sleep</div><div class="val" id="wr-sleep">—</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Habit Performance This Week</div>
+    <div id="wr-habit-breakdown"><div class="empty">Complete at least one check-in to see weekly data.</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Coach's Weekly Verdict</div>
+    <div id="wr-verdict" class="coach-msg"><strong>Coach says:</strong> Check in daily this week and come back for your verdict.</div>
+  </div>
+</div>
+
+<!-- COACH ANALYSIS -->
+<div class="page" id="analysis">
+  <p class="page-title">Coach Analysis</p>
+  <p class="page-sub">Behavioral insights, optimization tips, and accountability.</p>
+
+  <div class="card">
+    <div class="card-title">Behavioral Patterns</div>
+    <div id="patterns-list"><div class="empty">Check in for a few days to unlock pattern analysis.</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Optimization Suggestions</div>
+    <div id="suggestions-list"><div class="empty">Data needed. Start checking in daily.</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Accountability Report</div>
+    <div id="accountability-list"><div class="empty">Your coach needs data to hold you accountable.</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Habit Stacking Opportunities</div>
+    <div id="stacking-list"><div class="empty">Add more habits to unlock stacking suggestions.</div></div>
+  </div>
+</div>
+
+<script>
+// ─── STATE ────────────────────────────────────────────────────
+let habits = JSON.parse(localStorage.getItem('hc_habits') || '[]');
+let checkins = JSON.parse(localStorage.getItem('hc_checkins') || '[]');
+
+function save() {
+  localStorage.setItem('hc_habits', JSON.stringify(habits));
+  localStorage.setItem('hc_checkins', JSON.stringify(checkins));
+}
+
+// ─── CLOCK ────────────────────────────────────────────────────
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent =
+    now.toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'short'}) + ' · ' +
+    now.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'});
+}
+setInterval(updateClock, 1000); updateClock();
+
+// ─── NAV ──────────────────────────────────────────────────────
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (id === 'dashboard') renderDashboard();
+  if (id === 'checkin') renderCheckin();
+  if (id === 'weekly') renderWeekly();
+  if (id === 'analysis') renderAnalysis();
+  if (id === 'habits') renderHabitsTable();
+}
+
+// ─── HELPERS ──────────────────────────────────────────────────
+function today() { return new Date().toISOString().slice(0,10); }
+function todayCheckin() { return checkins.find(c => c.date === today()); }
+function catBadge(c) { return `<span class="badge badge-${c}">${c}</span>`; }
+function priorityLabel(p) {
+  if (p === 'high') return '<span class="priority-high">● High</span>';
+  if (p === 'medium') return '<span class="priority-med">● Med</span>';
+  return '<span class="priority-low">● Low</span>';
+}
+function pct(a,b) { return b ? Math.round((a/b)*100) : 0; }
+
+// ─── HABITS ───────────────────────────────────────────────────
+function addHabit() {
+  const name = document.getElementById('h-name').value.trim();
+  if (!name) return alert('Please enter a habit name.');
+  habits.push({
+    id: Date.now(),
+    name,
+    cat: document.getElementById('h-cat').value,
+    freq: document.getElementById('h-freq').value,
+    target: document.getElementById('h-target').value,
+    priority: document.getElementById('h-priority').value,
+    time: document.getElementById('h-time').value,
+    created: today()
+  });
+  save(); renderHabitsTable(); renderCheckin(); renderDashboard();
+  document.getElementById('h-name').value = '';
+  document.getElementById('h-target').value = '';
+}
+
+function removeHabit(id) {
+  if (!confirm('Remove this habit?')) return;
+  habits = habits.filter(h => h.id !== id); save();
+  renderHabitsTable(); renderCheckin(); renderDashboard();
+}
+
+function renderHabitsTable() {
+  const tb = document.getElementById('habits-table');
+  if (!habits.length) { tb.innerHTML = '<tr><td colspan="7" class="empty">No habits yet.</td></tr>'; return; }
+  tb.innerHTML = habits.map(h => `<tr>
+    <td><strong>${h.name}</strong></td>
+    <td>${catBadge(h.cat)}</td>
+    <td style="color:var(--muted);font-size:0.8rem">${h.freq}</td>
+    <td style="font-size:0.8rem">${h.target || '—'}</td>
+    <td>${priorityLabel(h.priority)}</td>
+    <td style="font-size:0.78rem;color:var(--muted)">${h.time}</td>
+    <td><button class="btn btn-danger btn-sm" onclick="removeHabit(${h.id})">Remove</button></td>
+  </tr>`).join('');
+}
+
+// ─── CHECK-IN ─────────────────────────────────────────────────
+let checkinStatus = {};
+
+function renderCheckin() {
+  document.getElementById('checkin-date').textContent = new Date().toLocaleDateString('en-GB', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+  const list = document.getElementById('checkin-habits-list');
+  const existing = todayCheckin();
+
+  if (!habits.length) { list.innerHTML = '<div class="empty">Add habits first.</div>'; return; }
+  if (existing) {
+    list.innerHTML = `<div class="coach-msg"><strong>Already checked in today!</strong> Come back tomorrow. Your score: ${existing.score}%</div>`;
+    document.getElementById('checkin-result').style.display = 'block';
+    document.getElementById('ci-score-display').textContent = existing.score + '%';
+    document.getElementById('ci-coach-response').innerHTML = '<strong>Coach says:</strong> ' + existing.coachMsg;
+    return;
+  }
+
+  checkinStatus = {};
+  habits.forEach(h => checkinStatus[h.id] = 'pending');
+
+  list.innerHTML = habits.map(h => `
+    <div class="checkin-habit">
+      <div>
+        <div class="hname">${h.name}</div>
+        <div class="hcat">${h.target || h.cat} · ${h.time}</div>
+      </div>
+      <div class="status-btns">
+        <button class="sbtn" id="sbtn-done-${h.id}" onclick="setStatus(${h.id},'done')">✓ Done</button>
+        <button class="sbtn" id="sbtn-partial-${h.id}" onclick="setStatus(${h.id},'partial')">~ Partial</button>
+        <button class="sbtn" id="sbtn-missed-${h.id}" onclick="setStatus(${h.id},'missed')">✗ Missed</button>
+      </div>
+    </div>`).join('');
+}
+
+function setStatus(id, status) {
+  checkinStatus[id] = status;
+  ['done','partial','missed'].forEach(s => {
+    const el = document.getElementById(`sbtn-${s}-${id}`);
+    if (el) { el.className = 'sbtn'; }
+  });
+  const active = document.getElementById(`sbtn-${status}-${id}`);
+  if (active) active.classList.add(`${status}-active`);
+}
+
+function submitCheckin() {
+  if (!habits.length) return alert('Add habits first!');
+  const existing = todayCheckin();
+  if (existing) return alert('Already checked in today!');
+
+  const energy = parseInt(document.getElementById('ci-energy').value) || 5;
+  const sleep = parseFloat(document.getElementById('ci-sleep').value) || 0;
+  const excuse = document.getElementById('ci-excuse').value.trim();
+  const win = document.getElementById('ci-win').value.trim();
+
+  let done = 0, partial = 0, missed = 0;
+  habits.forEach(h => {
+    const s = checkinStatus[h.id] || 'missed';
+    if (s === 'done') done++;
+    else if (s === 'partial') partial++;
+    else missed++;
+  });
+
+  const total = habits.length;
+  const score = Math.round(((done + partial * 0.5) / total) * 100);
+
+  // Coach message logic
+  let coachMsg = '';
+  if (score === 100) coachMsg = "Perfect day. 100%. This is what discipline looks like. Keep this energy.";
+  else if (score >= 80) coachMsg = `Strong day — ${score}%. ${missed} habit${missed>1?'s':''} missed. Don't let it become a pattern.`;
+  else if (score >= 60) coachMsg = `${score}% is okay, but you're capable of better. ${missed} missed. ${excuse ? `"${excuse}" — noted. Fix the environment, not the excuse.` : 'Identify what went wrong and eliminate it.'}`;
+  else if (score >= 40) coachMsg = `${score}%. That's below average, Sahil. ${missed} habits missed out of ${total}. ${energy < 5 ? 'Low energy noted — but habits protect you on hard days too.' : 'Energy was fine. This is a discipline issue. No shortcuts.'}`;
+  else coachMsg = `${score}%. This is a wake-up call. You missed ${missed} out of ${total} habits. ${excuse ? 'Excuses noted but not accepted.' : ''} Tomorrow you start fresh — but excuses compound just like discipline does.`;
+
+  if (sleep < 6 && sleep > 0) coachMsg += ' Sleep under 6hrs is hurting your performance.';
+  if (energy >= 8 && score < 70) coachMsg += ' High energy, low output — focus and environment need work.';
+
+  const entry = { date: today(), statuses: {...checkinStatus}, score, energy, sleep, excuse, win, coachMsg, done, partial, missed, total };
+  checkins.unshift(entry); save();
+
+  document.getElementById('checkin-result').style.display = 'block';
+  document.getElementById('ci-score-display').textContent = score + '%';
+  document.getElementById('ci-score-display').style.borderColor = score >= 80 ? 'var(--accent)' : score >= 60 ? 'var(--warn)' : 'var(--danger)';
+  document.getElementById('ci-score-display').style.color = score >= 80 ? 'var(--accent)' : score >= 60 ? 'var(--warn)' : 'var(--danger)';
+  document.getElementById('ci-coach-response').innerHTML = '<strong>Coach says:</strong> ' + coachMsg;
+
+  renderCheckin(); renderDashboard(); renderWeekly(); renderAnalysis();
+  ['ci-energy','ci-sleep','ci-excuse','ci-win'].forEach(id => document.getElementById(id).value = '');
+}
+
+// ─── DASHBOARD ────────────────────────────────────────────────
+function renderDashboard() {
+  document.getElementById('d-total-habits').textContent = habits.length;
+  document.getElementById('d-checkins').textContent = checkins.length;
+
+  const tc = todayCheckin();
+  document.getElementById('d-today-score').textContent = tc ? tc.score + '%' : '—';
+
+  const last7 = checkins.slice(0, 7);
+  const weekAvg = last7.length ? Math.round(last7.reduce((s,c) => s+c.score, 0) / last7.length) : null;
+  document.getElementById('d-weekly-score').textContent = weekAvg !== null ? weekAvg + '%' : '—';
+
+  // Discipline: % of days with score >=70 in last 14
+  const last14 = checkins.slice(0, 14);
+  const disciplineScore = last14.length ? Math.round((last14.filter(c => c.score >= 70).length / Math.min(last14.length, 14)) * 100) : null;
+  document.getElementById('d-discipline').textContent = disciplineScore !== null ? disciplineScore + '%' : '—';
+
+  // Best streak per habit
+  let bestStreak = 0;
+  habits.forEach(h => {
+    let streak = 0, max = 0;
+    const sorted = [...checkins].sort((a,b) => a.date < b.date ? 1 : -1);
+    sorted.forEach(c => {
+      if (c.statuses[h.id] === 'done') { streak++; max = Math.max(max, streak); }
+      else streak = 0;
+    });
+    bestStreak = Math.max(bestStreak, max);
+  });
+  document.getElementById('d-streak').textContent = bestStreak ? bestStreak + ' days' : '—';
+
+  // Coach message
+  const msgEl = document.getElementById('coach-daily-msg');
+  if (!checkins.length) {
+    msgEl.innerHTML = '<strong>Coach says:</strong> Add your habits and complete your first check-in. Discipline starts with measurement.';
+  } else if (tc) {
+    msgEl.innerHTML = '<strong>Coach says:</strong> ' + tc.coachMsg;
+  } else {
+    const yesterday = checkins[0];
+    msgEl.innerHTML = `<strong>Coach says:</strong> Yesterday you scored ${yesterday.score}%. ${yesterday.score < 70 ? "Today is a chance to course-correct. Don't waste it." : "Keep the momentum going. Check in today."}`;
+  }
+
+  // Week grid
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const weekEl = document.getElementById('week-overview');
+  const now = new Date();
+  weekEl.innerHTML = Array.from({length:7}, (_,i) => {
+    const d = new Date(now); d.setDate(now.getDate() - (6-i));
+    const ds = d.toISOString().slice(0,10);
+    const c = checkins.find(x => x.date === ds);
+    const cls = c ? (c.score >= 80 ? 'good' : c.score >= 50 ? 'ok' : 'bad') : '';
+    const scoreText = c ? c.score + '%' : '—';
+    const scoreColor = c ? (c.score >= 80 ? 'var(--accent)' : c.score >= 50 ? 'var(--warn)' : 'var(--danger)') : 'var(--muted)';
+    return `<div class="wday ${cls}"><div class="dname">${days[d.getDay()]}</div><div class="dscore" style="color:${scoreColor}">${scoreText}</div></div>`;
+  }).join('');
+
+  // Streak list
+  const streakEl = document.getElementById('streak-list');
+  if (!habits.length) { streakEl.innerHTML = '<div class="empty">No habits yet.</div>'; return; }
+  streakEl.innerHTML = habits.map(h => {
+    let streak = 0, totalDone = 0;
+    const sorted = [...checkins].sort((a,b) => a.date < b.date ? 1 : -1);
+    sorted.forEach(c => { if (c.statuses[h.id] === 'done') { streak++; totalDone++; } else if (streak > 0) streak = 0; });
+    const last7dots = sorted.slice(0,7).reverse().map(c => {
+      const s = c.statuses[h.id];
+      return `<div class="dot ${s==='done'?'done':s==='missed'?'missed':''}"></div>`;
+    }).join('');
+    const rate = checkins.length ? pct(totalDone, checkins.length) : 0;
+    return `<div style="margin-bottom:1rem">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <span style="font-size:0.88rem;font-weight:500">${h.name}</span>
+        <span style="font-size:0.75rem;color:var(--muted)">🔥 ${streak} day streak · ${rate}% overall</span>
+      </div>
+      <div class="pbar-wrap"><div class="pbar" style="width:${rate}%"></div></div>
+      <div class="streak-row">${last7dots}</div>
+    </div>`;
+  }).join('');
+}
+
+// ─── WEEKLY REVIEW ────────────────────────────────────────────
+function renderWeekly() {
+  if (!checkins.length) return;
+  const last7 = checkins.slice(0, 7);
+  const avgScore = Math.round(last7.reduce((s,c) => s+c.score, 0) / last7.length);
+  const avgEnergy = (last7.reduce((s,c) => s + (c.energy||0), 0) / last7.length).toFixed(1);
+  const avgSleep = (last7.filter(c=>c.sleep>0).reduce((s,c) => s+c.sleep, 0) / (last7.filter(c=>c.sleep>0).length||1)).toFixed(1);
+  const disciplined = last7.filter(c => c.score >= 70).length;
+  const disciplineScore = Math.round((disciplined / last7.length) * 100);
+
+  document.getElementById('wr-completion').textContent = avgScore + '%';
+  document.getElementById('wr-discipline').textContent = disciplineScore + '%';
+  document.getElementById('wr-energy').textContent = avgEnergy + '/10';
+  document.getElementById('wr-sleep').textContent = avgSleep + 'hrs';
+
+  // Per-habit breakdown
+  const bk = document.getElementById('wr-habit-breakdown');
+  if (!habits.length) { bk.innerHTML = '<div class="empty">No habits.</div>'; return; }
+
+  bk.innerHTML = habits.map(h => {
+    let done = 0, partial = 0, missed = 0;
+    last7.forEach(c => {
+      const s = c.statuses[h.id];
+      if (s === 'done') done++;
+      else if (s === 'partial') partial++;
+      else missed++;
+    });
+    const total = last7.length;
+    const rate = pct(done + partial*0.5, total);
+    const color = rate >= 80 ? 'var(--accent)' : rate >= 50 ? 'var(--warn)' : 'var(--danger)';
+    return `<div style="margin-bottom:1rem">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <span style="font-size:0.87rem;font-weight:500">${h.name} ${catBadge(h.cat)}</span>
+        <span style="font-size:0.8rem;font-weight:600;color:${color}">${rate}%</span>
+      </div>
+      <div class="pbar-wrap"><div class="pbar" style="width:${rate}%;background:${color}"></div></div>
+      <div style="font-size:0.73rem;color:var(--muted);margin-top:4px">✓ ${done} done · ~ ${partial} partial · ✗ ${missed} missed</div>
+    </div>`;
+  }).join('');
+
+  // Weekly verdict
+  const strongest = habits.map(h => {
+    let score = 0;
+    last7.forEach(c => { const s = c.statuses[h.id]; if (s==='done') score+=2; else if (s==='partial') score+=1; });
+    return {h, score};
+  }).sort((a,b) => b.score - a.score);
+
+  const best = strongest[0];
+  const worst = strongest[strongest.length - 1];
+  const excuses = last7.filter(c => c.excuse && c.excuse.length > 3).map(c => c.excuse);
+  const commonExcuse = excuses.length ? excuses[0] : null;
+
+  let verdict = `<strong>Coach says:</strong> `;
+  if (avgScore >= 80) verdict += `Outstanding week — ${avgScore}% average. You're building real discipline. `;
+  else if (avgScore >= 60) verdict += `Decent week at ${avgScore}%, but there's a gap between your potential and your output. `;
+  else verdict += `${avgScore}% average this week. That's not good enough and you know it. The habits you skip now are the habits you'll never build. `;
+
+  if (best) verdict += `<br><br>💪 <span class="hl">Strongest habit: ${best.h.name}</span> — keep it going. `;
+  if (worst && worst.score < best.score) verdict += `⚠️ <span class="hl">Weakest habit: ${worst.h.name}</span> — this needs attention. `;
+  if (commonExcuse) verdict += `<br><br>You mentioned: <em>"${commonExcuse}"</em> — track whether this excuse is recurring.`;
+  if (parseFloat(avgSleep) < 6.5) verdict += `<br><br>🔴 Avg sleep ${avgSleep}hrs is too low. Poor sleep is killing your discipline and energy.`;
+
+  document.getElementById('wr-verdict').innerHTML = verdict;
+}
+
+// ─── ANALYSIS ─────────────────────────────────────────────────
+function renderAnalysis() {
+  if (checkins.length < 3) {
+    ['patterns-list','suggestions-list','accountability-list','stacking-list'].forEach(id => {
+      document.getElementById(id).innerHTML = '<div class="empty">Need at least 3 check-ins for analysis. Keep going!</div>';
+    });
+    return;
+  }
+
+  const recent = checkins.slice(0, 14);
+
+  // Patterns
+  const patterns = [];
+  const avgEnergy = recent.reduce((s,c) => s+(c.energy||5), 0) / recent.length;
+  const lowEnergyDays = recent.filter(c => c.energy <= 4);
+  const highEnergyDays = recent.filter(c => c.energy >= 8);
+
+  if (lowEnergyDays.length >= 3) patterns.push({icon:'⚡', text:`<span class="hl">Low energy pattern detected</span> — you've had ${lowEnergyDays.length} low-energy days recently. Average score on those days: ${Math.round(lowEnergyDays.reduce((s,c)=>s+c.score,0)/lowEnergyDays.length)}%. Build energy management habits (sleep, nutrition) to protect your consistency.`});
+  if (highEnergyDays.length && highEnergyDays.reduce((s,c)=>s+c.score,0)/highEnergyDays.length > avgEnergy) patterns.push({icon:'🔋', text:`<span class="hl">Energy-performance correlation found</span> — on high energy days you perform ${Math.round(highEnergyDays.reduce((s,c)=>s+c.score,0)/highEnergyDays.length)}% vs your avg ${Math.round(recent.reduce((s,c)=>s+c.score,0)/recent.length)}%. Protecting your energy = protecting your habits.`});
+
+  const sleepData = recent.filter(c => c.sleep > 0);
+  if (sleepData.length >= 3) {
+    const avgSleep = sleepData.reduce((s,c)=>s+c.sleep,0)/sleepData.length;
+    if (avgSleep < 6.5) patterns.push({icon:'😴', text:`<span class="hl">Sleep deficit pattern</span> — avg ${avgSleep.toFixed(1)}hrs over last ${sleepData.length} days. Chronic undersleeping degrades willpower, which directly tanks habit completion. This is your #1 fix.`});
+  }
+
+  const excuseCount = recent.filter(c => c.excuse && c.excuse.length > 3).length;
+  if (excuseCount >= 3) patterns.push({icon:'🚨', text:`<span class="hl">Excuse pattern detected</span> — you've provided excuses on ${excuseCount} of ${recent.length} days. Patterns don't lie: the environment needs to change, not the intentions.`});
+
+  if (!patterns.length) patterns.push({icon:'✅', text:'No negative patterns detected in your recent data. Stay consistent.'});
+
+  document.getElementById('patterns-list').innerHTML = patterns.map(p => `
+    <div class="analysis-item"><div class="analysis-icon">${p.icon}</div><div class="analysis-text">${p.text}</div></div>`).join('');
+
+  // Suggestions
+  const suggestions = [];
+  habits.forEach(h => {
+    let missedCount = 0;
+    recent.forEach(c => { if (c.statuses[h.id] === 'missed') missedCount++; });
+    const missRate = missedCount / recent.length;
+
+    if (missRate > 0.5) {
+      if (h.time === 'morning') suggestions.push({icon:'⏰', text:`<span class="hl">${h.name}</span> fails in the morning — try shifting it to the evening or attaching it to a fixed trigger like after dinner.`});
+      else if (h.time === 'evening') suggestions.push({icon:'🔄', text:`<span class="hl">${h.name}</span> struggles in the evening — consider doing it right when you wake up before decision fatigue hits.`});
+      else suggestions.push({icon:'🎯', text:`<span class="hl">${h.name}</span> has a ${Math.round(missRate*100)}% miss rate — reduce friction: lay out equipment the night before, set a specific time, link it to an existing habit.`});
+    }
+  });
+
+  if (habits.length >= 2) {
+    const healthHabits = habits.filter(h => h.cat === 'health');
+    const studyHabits = habits.filter(h => h.cat === 'study');
+    if (healthHabits.length && studyHabits.length) suggestions.push({icon:'🔗', text:`<span class="hl">Habit stack opportunity:</span> Try doing a short workout → then immediately going into study mode. Physical activity increases focus by 20–30%. Stack "${healthHabits[0].name}" before "${studyHabits[0].name}".`});
+  }
+
+  if (parseFloat(avgEnergy.toFixed(1)) < 6) suggestions.push({icon:'🥗', text:`<span class="hl">Energy optimization:</span> Your avg energy (${avgEnergy.toFixed(1)}/10) is low. Add a "no phone first 30 min" rule and a consistent wake time — these are free energy upgrades.`});
+  if (!suggestions.length) suggestions.push({icon:'💡', text:'Keep building your data. More check-ins = more personalized suggestions.'});
+
+  document.getElementById('suggestions-list').innerHTML = suggestions.map(s => `
+    <div class="analysis-item"><div class="analysis-icon">${s.icon}</div><div class="analysis-text">${s.text}</div></div>`).join('');
+
+  // Accountability
+  const accountability = [];
+  const overallAvg = Math.round(recent.reduce((s,c)=>s+c.score,0)/recent.length);
+  if (overallAvg < 70) accountability.push({icon:'🔴', text:`Overall ${overallAvg}% completion rate. At this rate, you are building the habit of <strong>not following through</strong>. That compounds too — in the wrong direction.`});
+  else accountability.push({icon:'🟢', text:`${overallAvg}% completion rate. You're above the 70% discipline threshold. Raise the bar — aim for 85%+.`});
+
+  habits.forEach(h => {
+    let missed = 0;
+    recent.slice(0,7).forEach(c => { if (c.statuses[h.id] === 'missed') missed++; });
+    if (missed >= 4) accountability.push({icon:'⚠️', text:`<span class="hl">${h.name}</span> — missed ${missed} times this week. This is a <strong>priority habit you're consistently skipping</strong>. Either commit fully or drop it — half-commitment is the worst outcome.`});
+  });
+
+  if (!accountability[1]) accountability.push({icon:'📊', text:'No critical accountability flags this period. Stay vigilant — complacency is the enemy.'});
+  document.getElementById('accountability-list').innerHTML = accountability.map(a => `
+    <div class="analysis-item"><div class="analysis-icon">${a.icon}</div><div class="analysis-text">${a.text}</div></div>`).join('');
+
+  // Stacking
+  const stacks = [];
+  const morningHabits = habits.filter(h => h.time === 'morning');
+  const nightHabits = habits.filter(h => h.time === 'night');
+  const flexHabits = habits.filter(h => h.time === 'flexible');
+
+  if (morningHabits.length >= 2) stacks.push({icon:'☀️', text:`<span class="hl">Morning stack:</span> ${morningHabits.map(h=>h.name).join(' → ')}. Do these back-to-back with no gap. Morning stacks are 40% more likely to be completed than isolated habits.`});
+  if (nightHabits.length >= 2) stacks.push({icon:'🌙', text:`<span class="hl">Night stack:</span> ${nightHabits.map(h=>h.name).join(' → ')}. Set a fixed wind-down routine — same order every night.`});
+  if (habits.find(h=>h.cat==='health') && habits.find(h=>h.cat==='study')) stacks.push({icon:'🧠', text:`<span class="hl">Fitness → Focus stack:</span> Schedule any physical habit 30–60 mins before your study block. BDNF released during exercise directly improves memory and concentration.`});
+
+  if (!stacks.length) stacks.push({icon:'🔗', text:'Add habits with different time slots to see stacking recommendations.'});
+  document.getElementById('stacking-list').innerHTML = stacks.map(s => `
+    <div class="analysis-item"><div class="analysis-icon">${s.icon}</div><div class="analysis-text">${s.text}</div></div>`).join('');
+}
+
+// ─── INIT ─────────────────────────────────────────────────────
+renderHabitsTable(); renderDashboard();
+</script>
+</body>
+</html>
